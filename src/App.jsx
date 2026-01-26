@@ -3,6 +3,7 @@ import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useS
 import Column from './components/Column'
 import TaskCard from './components/TaskCard'
 import AddTaskModal from './components/AddTaskModal'
+import { supabase } from './supabaseClient'
 
 const COLUMNS = [
   { id: 'todo', title: '📥 To Do', color: 'border-blue-500' },
@@ -10,8 +11,6 @@ const COLUMNS = [
   { id: 'klausi', title: '🤖 Klausi', color: 'border-purple-500' },
   { id: 'done', title: '✅ Done', color: 'border-green-500' },
 ]
-
-const API_URL = '/api/tasks'
 
 function App() {
   const [tasks, setTasks] = useState([])
@@ -30,13 +29,36 @@ function App() {
 
   useEffect(() => {
     fetchTasks()
+    
+    // Subscribe to real-time updates
+    const subscription = supabase
+      .channel('tasks_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'tasks' },
+        (payload) => {
+          console.log('Change received!', payload)
+          fetchTasks()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function fetchTasks() {
     try {
-      const res = await fetch(API_URL)
-      const data = await res.json()
-      setTasks(data)
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: true })
+      
+      if (error) throw error
+      
+      // Rename 'status' to 'column' for compatibility
+      const tasksWithColumn = data.map(t => ({ ...t, column: t.status }))
+      setTasks(tasksWithColumn)
     } catch (error) {
       console.error('Failed to fetch tasks:', error)
     } finally {
@@ -46,13 +68,20 @@ function App() {
 
   async function createTask(taskData) {
     try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(taskData),
-      })
-      const newTask = await res.json()
-      setTasks([...tasks, newTask])
+      const newTask = {
+        id: `task-${Date.now()}`,
+        ...taskData,
+        status: taskData.column,
+        created_at: new Date().toISOString(),
+      }
+      
+      const { error } = await supabase
+        .from('tasks')
+        .insert(newTask)
+      
+      if (error) throw error
+      
+      await fetchTasks()
     } catch (error) {
       console.error('Failed to create task:', error)
     }
@@ -76,12 +105,21 @@ function App() {
 
   async function updateTask(id, updates) {
     try {
-      await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      })
-      setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t))
+      const supabaseUpdate = { ...updates }
+      if (updates.column) {
+        supabaseUpdate.status = updates.column
+        delete supabaseUpdate.column
+      }
+      supabaseUpdate.updated_at = new Date().toISOString()
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update(supabaseUpdate)
+        .eq('id', id)
+      
+      if (error) throw error
+      
+      await fetchTasks()
     } catch (error) {
       console.error('Failed to update task:', error)
     }
@@ -89,7 +127,13 @@ function App() {
 
   async function deleteTask(id) {
     try {
-      await fetch(`${API_URL}/${id}`, { method: 'DELETE' })
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      
       setTasks(tasks.filter(t => t.id !== id))
     } catch (error) {
       console.error('Failed to delete task:', error)
