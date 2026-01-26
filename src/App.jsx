@@ -68,22 +68,36 @@ function App() {
 
   async function createTask(taskData) {
     try {
+      const now = new Date().toISOString()
       const newTask = {
-        id: `task-${Date.now()}`,
-        ...taskData,
-        status: taskData.column,
-        created_at: new Date().toISOString(),
+        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title: taskData.title,
+        description: taskData.description || null,
+        status: taskData.column || 'todo',
+        priority: taskData.priority || 'normal',
+        deadline: taskData.deadline || null,
+        created_at: now,
+        updated_at: now,
       }
       
-      const { error } = await supabase
+      console.log('Creating task:', newTask)
+      
+      const { data, error } = await supabase
         .from('tasks')
         .insert(newTask)
+        .select()
       
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        alert(`Fehler beim Erstellen: ${error.message}`)
+        throw error
+      }
       
+      console.log('Task created:', data)
       await fetchTasks()
     } catch (error) {
       console.error('Failed to create task:', error)
+      alert(`Task konnte nicht erstellt werden: ${error.message}`)
     }
   }
 
