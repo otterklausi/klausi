@@ -1,0 +1,59 @@
+{
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Papaprotect Deep Dive",
+      "description": "",
+      "priority": "normal",
+      "deadline": null,
+      "column": "todo",
+      "createdAt": "2025-01-21T10:00:00.000Z"
+    },
+    {
+      "id": "task-2",
+      "title": "GEZ abmelden",
+      "description": "",
+      "priority": "normal",
+      "deadline": "2026-01-27",
+      "column": "todo",
+      "createdAt": "2025-01-21T10:00:00.000Z"
+    },
+    {
+      "id": "task-3",
+      "title": "✅ Dogcare Posts fertig (5x)",
+      "description": "Australian Shepherd, Rottweiler, Knochenbruch, Arthrose, Epilepsie",
+      "priority": "normal",
+      "deadline": null,
+      "column": "done",
+      "createdAt": "2025-01-21T10:00:00.000Z",
+      "completedAt": "2026-01-26T15:45:00.000Z"
+    },
+    {
+      "id": "task-4",
+      "title": "Angebot Policentransfer",
+      "description": "",
+      "priority": "normal",
+      "deadline": null,
+      "column": "todo",
+      "createdAt": "2025-01-21T10:00:00.000Z"
+    },
+    {
+      "id": "task-5",
+      "title": "ACC Website Livegang",
+      "description": "",
+      "priority": "normal",
+      "deadline": "2026-01-30",
+      "column": "todo",
+      "createdAt": "2025-01-21T10:00:00.000Z"
+    },
+    {
+      "id": "task-6",
+      "title": "Dogcare Posts - Batch 2 (6x offen)",
+      "description": "Patellaluxation, CT beim Hund, Herzkrankheiten, Narkose, Fremdkörper verschluckt, Lahmheit, Bauchoperation",
+      "priority": "normal",
+      "deadline": null,
+      "column": "todo",
+      "createdAt": "2026-01-26T15:45:00.000Z"
+    }
+  ]
+}
