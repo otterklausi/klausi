@@ -3,6 +3,10 @@ import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useS
 import Column from './components/Column'
 import TaskCard from './components/TaskCard'
 import AddTaskModal from './components/AddTaskModal'
+import StatusPanel from './components/StatusPanel'
+import ActivityLog from './components/ActivityLog'
+import NotesPanel from './components/NotesPanel'
+import DeliverablesTab from './components/DeliverablesTab'
 import { supabase } from './supabaseClient'
 
 const COLUMNS = [
@@ -12,12 +16,20 @@ const COLUMNS = [
   { id: 'done', title: '✅ Done', color: 'border-green-500' },
 ]
 
+const TABS = [
+  { id: 'kanban', title: '📋 Kanban' },
+  { id: 'dashboard', title: '📊 Dashboard' },
+  { id: 'notes', title: '📝 Notizen' },
+  { id: 'deliverables', title: '📁 Deliverables' },
+]
+
 function App() {
   const [tasks, setTasks] = useState([])
   const [activeTask, setActiveTask] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('kanban')
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -30,7 +42,6 @@ function App() {
   useEffect(() => {
     fetchTasks()
     
-    // Subscribe to real-time updates
     const subscription = supabase
       .channel('tasks_changes')
       .on('postgres_changes', 
@@ -56,7 +67,6 @@ function App() {
       
       if (error) throw error
       
-      // Rename 'status' to 'column' for compatibility
       const tasksWithColumn = data.map(t => ({ ...t, column: t.status }))
       setTasks(tasksWithColumn)
     } catch (error) {
@@ -80,8 +90,6 @@ function App() {
         updated_at: now,
       }
       
-      console.log('Creating task:', newTask)
-      
       const { data, error } = await supabase
         .from('tasks')
         .insert(newTask)
@@ -93,7 +101,6 @@ function App() {
         throw error
       }
       
-      console.log('Task created:', data)
       await fetchTasks()
     } catch (error) {
       console.error('Failed to create task:', error)
@@ -108,10 +115,8 @@ function App() {
 
   async function handleSaveTask(taskData) {
     if (taskData.id) {
-      // Update existing task
       await updateTask(taskData.id, taskData)
     } else {
-      // Create new task
       await createTask(taskData)
     }
     setEditingTask(null)
@@ -168,16 +173,13 @@ function App() {
     const taskId = active.id
     const overId = over.id
 
-    // Find the column we're dropping into
     let newColumn = overId
     
-    // If we're dropping over a task, find its column
     const overTask = tasks.find(t => t.id === overId)
     if (overTask) {
       newColumn = overTask.column
     }
 
-    // Only update if it's a valid column
     if (COLUMNS.some(c => c.id === newColumn)) {
       const task = tasks.find(t => t.id === taskId)
       if (task && task.column !== newColumn) {
@@ -199,39 +201,118 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] p-6">
-      <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">📋 Kanban Board</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          + Neuer Task
-        </button>
+    <div className="min-h-screen bg-[#0f0f0f]">
+      {/* Header */}
+      <header className="bg-[#1a1a1a] border-b border-gray-800 p-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-white">🦦 OtterKlausi Dashboard</h1>
+          {activeTab === 'kanban' && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              + Neuer Task
+            </button>
+          )}
+        </div>
+        
+        {/* Tabs */}
+        <nav className="flex gap-1 mt-4">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                activeTab === tab.id 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              {tab.title}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {COLUMNS.map(column => (
-            <Column
-              key={column.id}
-              column={column}
-              tasks={getTasksByColumn(column.id)}
-              onDeleteTask={deleteTask}
-              onEditTask={handleEditTask}
-            />
-          ))}
-        </div>
+      {/* Content */}
+      <main className="p-6">
+        {activeTab === 'kanban' && (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {COLUMNS.map(column => (
+                <Column
+                  key={column.id}
+                  column={column}
+                  tasks={getTasksByColumn(column.id)}
+                  onDeleteTask={deleteTask}
+                  onEditTask={handleEditTask}
+                />
+              ))}
+            </div>
 
-        <DragOverlay>
-          {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
-        </DragOverlay>
-      </DndContext>
+            <DragOverlay>
+              {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+
+        {activeTab === 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <StatusPanel />
+              <div className="bg-[#1a1a1a] rounded-lg p-4">
+                <h2 className="text-lg font-semibold text-white mb-4">📈 Übersicht</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-[#2a2a2a] rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-400">
+                      {tasks.filter(t => t.column === 'todo').length}
+                    </div>
+                    <div className="text-sm text-gray-400">To Do</div>
+                  </div>
+                  <div className="bg-[#2a2a2a] rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-yellow-400">
+                      {tasks.filter(t => t.column === 'karim').length}
+                    </div>
+                    <div className="text-sm text-gray-400">Karim</div>
+                  </div>
+                  <div className="bg-[#2a2a2a] rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {tasks.filter(t => t.column === 'klausi').length}
+                    </div>
+                    <div className="text-sm text-gray-400">Klausi</div>
+                  </div>
+                  <div className="bg-[#2a2a2a] rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-green-400">
+                      {tasks.filter(t => t.column === 'done').length}
+                    </div>
+                    <div className="text-sm text-gray-400">Done</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-1">
+              <ActivityLog />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'notes' && (
+          <div className="max-w-2xl mx-auto">
+            <NotesPanel />
+          </div>
+        )}
+
+        {activeTab === 'deliverables' && (
+          <div className="max-w-2xl mx-auto">
+            <DeliverablesTab />
+          </div>
+        )}
+      </main>
 
       <AddTaskModal
         isOpen={isModalOpen}
