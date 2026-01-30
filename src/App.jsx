@@ -6,6 +6,7 @@ import {
   Kanban,
   StickyNote,
   FolderOpen,
+  FileText,
   Sun,
   Moon,
   Command,
@@ -33,6 +34,7 @@ import DailyHabits from './components/DailyHabits'
 import FocusBlockVisualizer from './components/FocusBlockVisualizer'
 import WeeklyReview from './components/WeeklyReview'
 import GoalProgress from './components/GoalProgress'
+import BlogPosts from './components/BlogPosts'
 import { supabase } from './supabaseClient'
 
 const COLUMNS = [
@@ -45,6 +47,7 @@ const COLUMNS = [
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'kanban', label: 'Kanban', icon: Kanban },
+  { id: 'blog', label: 'Blog', icon: FileText },
   { id: 'notes', label: 'Notizen', icon: StickyNote },
   { id: 'deliverables', label: 'Deliverables', icon: FolderOpen },
 ]
@@ -436,6 +439,12 @@ function App() {
                 {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
               </DragOverlay>
             </DndContext>
+          )}
+
+          {activeTab === 'blog' && (
+            <div className="max-w-6xl mx-auto">
+              <BlogPosts />
+            </div>
           )}
 
           {activeTab === 'notes' && (
