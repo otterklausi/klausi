@@ -29,7 +29,9 @@ import NotesPanel from './components/NotesPanel'
 import DeliverablesTab from './components/DeliverablesTab'
 import CommandPalette from './components/CommandPalette'
 import PomodoroTimer from './components/PomodoroTimer'
-import WhoopWidget from './components/WhoopWidget'
+import DailyHabits from './components/DailyHabits'
+import FocusBlockVisualizer from './components/FocusBlockVisualizer'
+import WeeklyReview from './components/WeeklyReview'
 import GoalProgress from './components/GoalProgress'
 import { supabase } from './supabaseClient'
 
@@ -397,7 +399,13 @@ function App() {
               {/* New Widgets Row */}
               <div className="grid md:grid-cols-3 gap-6">
                 <PomodoroTimer />
-                <WhoopWidget />
+                <DailyHabits />
+                <FocusBlockVisualizer />
+              </div>
+
+              {/* Second Row */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <WeeklyReview />
                 <GoalProgress />
               </div>
             </div>
