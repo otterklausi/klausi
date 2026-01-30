@@ -28,6 +28,9 @@ import ActivityLog from './components/ActivityLog'
 import NotesPanel from './components/NotesPanel'
 import DeliverablesTab from './components/DeliverablesTab'
 import CommandPalette from './components/CommandPalette'
+import PomodoroTimer from './components/PomodoroTimer'
+import WhoopWidget from './components/WhoopWidget'
+import GoalProgress from './components/GoalProgress'
 import { supabase } from './supabaseClient'
 
 const COLUMNS = [
@@ -389,6 +392,13 @@ function App() {
               <div className="grid md:grid-cols-2 gap-6">
                 <StatusPanel />
                 <ActivityLog />
+              </div>
+
+              {/* New Widgets Row */}
+              <div className="grid md:grid-cols-3 gap-6">
+                <PomodoroTimer />
+                <WhoopWidget />
+                <GoalProgress />
               </div>
             </div>
           )}
