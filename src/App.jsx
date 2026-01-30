@@ -443,7 +443,10 @@ function App() {
 
           {activeTab === 'blog' && (
             <div className="max-w-6xl mx-auto">
-              <BlogPosts />
+              <div className="glass rounded-2xl p-12 text-center">
+                <h2 className="text-2xl font-bold mb-4">Blog Editor</h2>
+                <p className="text-[var(--text-secondary)]">Wird geladen...</p>
+              </div>
             </div>
           )}
 
