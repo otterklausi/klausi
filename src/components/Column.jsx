@@ -1,41 +1,59 @@
 import { useDroppable } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { motion } from 'framer-motion'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { MoreHorizontal, Plus } from 'lucide-react'
 import TaskCard from './TaskCard'
 
-function Column({ column, tasks, onDeleteTask, onEditTask }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: column.id,
-  })
+export default function Column({ column, tasks, onDeleteTask, onEditTask }) {
+  const { setNodeRef, isOver } = useDroppable({ id: column.id })
 
   return (
-    <div
-      ref={setNodeRef}
-      className={`bg-[#1a1a1a] rounded-xl p-4 min-h-[500px] border-t-4 ${column.color} ${
-        isOver ? 'ring-2 ring-blue-500/50' : ''
-      }`}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col h-full"
     >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-white">{column.title}</h2>
-        <span className="bg-[#2a2a2a] text-gray-400 text-sm px-2 py-1 rounded-full">
-          {tasks.length}
-        </span>
+      {/* Column Header */}
+      <div className={`flex items-center justify-between p-4 rounded-t-2xl border-b border-[var(--border-color)] ${column.color} bg-opacity-10`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-3 h-3 rounded-full ${column.color}`} />
+          <h3 className="font-display font-semibold">{column.title}</h3>
+          <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
+            {tasks.length}
+          </span>
+        </div>
+        <button className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-tertiary)]">
+          <MoreHorizontal size={16} />
+        </button>
       </div>
 
-      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+      {/* Tasks Container */}
+      <div
+        ref={setNodeRef}
+        className={`flex-1 p-3 rounded-b-2xl bg-[var(--bg-elevated)]/30 min-h-[200px] transition-colors ${
+          isOver ? 'bg-primary-500/10 ring-2 ring-primary-500/30' : ''
+        }`}
+      >
         <div className="space-y-3">
-          {tasks.map(task => (
-            <TaskCard key={task.id} task={task} onDelete={onDeleteTask} onEdit={onEditTask} />
+          {tasks.map((task, index) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              index={index}
+              onDelete={() => onDeleteTask(task.id)}
+              onEdit={() => onEditTask(task)}
+            />
           ))}
         </div>
-      </SortableContext>
 
-      {tasks.length === 0 && (
-        <div className="text-gray-500 text-center py-8 text-sm">
-          Keine Tasks
-        </div>
-      )}
-    </div>
+        {tasks.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-32 text-[var(--text-tertiary)]">
+            <p className="text-sm">Keine Tasks</p>
+            <p className="text-xs mt-1">Ziehe Tasks hierher</p>
+          </div>
+        )}
+      </div>
+    </motion.div>
   )
 }
-
-export default Column
