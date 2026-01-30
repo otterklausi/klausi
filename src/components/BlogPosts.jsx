@@ -83,10 +83,19 @@ export default function BlogPosts() {
         .select('*')
         .order('created_at', { ascending: false })
       
-      if (error) throw error
-      setPosts(data || [])
+      if (error) {
+        console.error('Supabase error:', error)
+        // If table doesn't exist, show empty state
+        if (error.message?.includes('does not exist') || error.code === '42P01') {
+          console.log('blog_posts table not found')
+        }
+        setPosts([])
+      } else {
+        setPosts(data || [])
+      }
     } catch (error) {
       console.error('Error fetching posts:', error)
+      setPosts([])
     } finally {
       setLoading(false)
     }
